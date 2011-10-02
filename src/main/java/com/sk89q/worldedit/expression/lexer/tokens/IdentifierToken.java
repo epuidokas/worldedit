@@ -17,9 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.sk89q.worldedit.expression.lexer;
+package com.sk89q.worldedit.expression.lexer.tokens;
 
-import com.sk89q.worldedit.expression.lexer.tokens.Token;
 
 public class IdentifierToken extends Token {
     public final String value;

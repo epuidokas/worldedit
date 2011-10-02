@@ -24,10 +24,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.sk89q.worldedit.expression.lexer.tokens.CharacterToken;
-import com.sk89q.worldedit.expression.lexer.tokens.NegateSignToken;
-import com.sk89q.worldedit.expression.lexer.tokens.NumberToken;
-import com.sk89q.worldedit.expression.lexer.tokens.Token;
+import com.sk89q.worldedit.expression.lexer.tokens.*;
 
 public class Lexer {
     private final String expression;
@@ -46,7 +43,6 @@ public class Lexer {
     private final List<Token> tokenize() throws LexerException {
         List<Token> tokens = new ArrayList<Token>();
 
-        boolean previousWasOperator = true;
         do {
             skipWhitespace();
             if (position >= expression.length())
@@ -55,30 +51,21 @@ public class Lexer {
             final char ch = peek();
             switch (ch) {
             case '-':
-                if (previousWasOperator) {
-                    tokens.add(new NegateSignToken(position++));
-                    break;
-                }
-                /* FALL-THROUGH */
-
             case '+':
             case '*':
             case '/':
             case '%':
             case '^':
-            case ',':
-            case '(':
-                tokens.add(new CharacterToken(position++, ch));
-                previousWasOperator = true;
+                tokens.add(new OperatorToken(position++, ch));
                 break;
 
+            case ',':
+            case '(':
             case ')':
                 tokens.add(new CharacterToken(position++, ch));
-                previousWasOperator = false;
                 break;
 
             default:
-                previousWasOperator = false;
                 final Matcher numberMatcher = numberPattern.matcher(expression.substring(position));
                 if (numberMatcher.lookingAt()) {
                     String numberPart = numberMatcher.group(1);

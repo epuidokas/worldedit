@@ -28,8 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.sk89q.worldedit.expression.Identifiable;
-import com.sk89q.worldedit.expression.lexer.IdentifierToken;
+import com.sk89q.worldedit.expression.lexer.tokens.IdentifierToken;
 import com.sk89q.worldedit.expression.lexer.tokens.NumberToken;
+import com.sk89q.worldedit.expression.lexer.tokens.OperatorToken;
 import com.sk89q.worldedit.expression.lexer.tokens.Token;
 import com.sk89q.worldedit.expression.runtime.Constant;
 import com.sk89q.worldedit.expression.runtime.Functions;
@@ -66,7 +67,7 @@ public class Parser {
     private Invokable parse() throws ParserException {
         final Invokable ret = parseInternal();
         if (position < tokens.size()) {
-            throw new ParserException(peek(), "Extra tokens at the end of the input");
+            throw new ParserException(peek().position, "Extra tokens at the end of the input");
         }
         return ret;
     }
@@ -74,12 +75,16 @@ public class Parser {
     private final Invokable parseInternal() throws ParserException {
         LinkedList<Identifiable> halfProcessed = new LinkedList<Identifiable>();
 
+        // process brackets, numbers, functions, variables and detect prefix operators
+        
+        boolean expressionStart = true;
         loop: while (position < tokens.size()) {
             final Token current = peek();
             switch (current.id()) {
             case '0':
-                halfProcessed.add(new Constant(((NumberToken)current).value));
+                halfProcessed.add(new Constant(((NumberToken) current).value));
                 ++position;
+                expressionStart = false;
                 break;
 
             case 'i':
@@ -92,24 +97,38 @@ public class Parser {
                 else {
                     Variable variable = variables.get(identifierToken.value);
                     if (variable == null) {
-                        throw new ParserException(current, "Variable not found");
+                        throw new ParserException(current.position, "Variable not found");
                     }
                     halfProcessed.add(variable);
                 }
+                expressionStart = false;
                 break;
 
             case '(':
                 halfProcessed.add(parseBracket());
+                expressionStart = false;
                 break;
 
             case ',':
             case ')':
-                break loop; // not quite clean. parseBracket should probably pass a limiting character
-                //throw new ParserException(peek(), "Unmatched closing bracket");
+                break loop;
 
             default:
+                if (current instanceof OperatorToken) {
+                    if (expressionStart) {
+                        halfProcessed.add(new PrefixOperator((OperatorToken) current));
+                    }
+                    else {
+                        halfProcessed.add(current);
+                    }
+                    ++position;
+                    expressionStart = true;
+                    break;
+                }
+
                 halfProcessed.add(current);
                 ++position;
+                expressionStart = false;
             }
         }
 
@@ -118,7 +137,7 @@ public class Parser {
 
     private static final Map<Character, String> level4Ops  = new HashMap<Character, String>();
     private static final Map<Character, String> level3Ops  = new HashMap<Character, String>();
-    private static final Map<Character, String> expOp = Collections.singletonMap('^', "exp");
+    private static final Map<Character, String> powerOp = Collections.singletonMap('^', "pow");
     static {
         level4Ops.put('+', "add");
         level4Ops.put('-', "sub");
@@ -140,7 +159,8 @@ public class Parser {
         try {
             return Operators.getOperator(operator, lhsInvokable, rhsInvokable);
         } catch (NoSuchMethodException e) {
-            throw new ParserException((Token) input.get(lhs.size()), "Couldn't find operator '"+operator+"'");
+            final Token operatorToken = (Token) input.get(lhs.size());
+            throw new ParserException(operatorToken.position, "Couldn't find operator '"+operator+"'");
         }
     }
 
@@ -149,7 +169,7 @@ public class Parser {
         LinkedList<Identifiable> rhs = new LinkedList<Identifiable>();
         String operator = process(input, lhs, rhs, level3Ops);
 
-        Invokable rhsInvokable = processExp(rhs);
+        Invokable rhsInvokable = processPower(rhs);
         if (operator == null) return rhsInvokable;
 
         Invokable lhsInvokable = processLevel3(lhs);
@@ -157,37 +177,39 @@ public class Parser {
         try {
             return Operators.getOperator(operator, lhsInvokable, rhsInvokable);
         } catch (NoSuchMethodException e) {
-            throw new ParserException((Token) input.get(lhs.size()), "Couldn't find operator '"+operator+"'");
+            final Token operatorToken = (Token) input.get(lhs.size());
+            throw new ParserException(operatorToken.position, "Couldn't find operator '"+operator+"'");
         }
     }
 
-    private Invokable processExp(LinkedList<Identifiable> input) throws ParserException {
+    private Invokable processPower(LinkedList<Identifiable> input) throws ParserException {
         LinkedList<Identifiable> lhs = new LinkedList<Identifiable>();
         LinkedList<Identifiable> rhs = new LinkedList<Identifiable>();
-        String operator = process(input, lhs, rhs, expOp);
+        String operator = process(input, lhs, rhs, powerOp);
 
         Invokable rhsInvokable = processLevel2(rhs);
         if (operator == null) return rhsInvokable;
 
-        Invokable lhsInvokable = processExp(lhs);
+        Invokable lhsInvokable = processPower(lhs);
 
         try {
             return Operators.getOperator(operator, lhsInvokable, rhsInvokable);
         } catch (NoSuchMethodException e) {
-            throw new ParserException((Token) input.get(lhs.size()), "Couldn't find operator '"+operator+"'");
+            final Token operatorToken = (Token) input.get(lhs.size());
+            throw new ParserException(operatorToken.position, "Couldn't find operator '"+operator+"'");
         }
     }
 
     private Invokable processLevel2(LinkedList<Identifiable> input) throws ParserException {
         if (input.isEmpty()) {
-            throw new ParserException(new NullToken(-1), "Expression missing.");
+            throw new ParserException(-1, "Expression missing.");
         }
 
         Invokable ret = (Invokable) input.removeLast();
         while (!input.isEmpty()) {
             final Identifiable last = input.removeLast();
             switch (last.id()) {
-            case '~':
+            case '-':
                 final Invokable arg = ret;
                 ret = new Invokable() {
                     @Override
@@ -206,15 +228,20 @@ public class Parser {
                     }
                 };
                 break;
+                
+            case '+':
+                break;
 
             default:
                 if (last instanceof Token) {
-                    throw new ParserException((Token)last, "Extra token found in expression: "+last);
+                    throw new ParserException(((Token)last).position, "Extra token found in expression: "+last);
+                }
+                else if (last instanceof Invokable) {
+                    throw new ParserException(-1, "Extra expression found: "+last);
                 }
                 else {
-                    throw new ParserException(new NullToken(-1), "Extra expression found: "+last);
+                    throw new ParserException(-1, "Extra element found: "+last);
                 }
-
             }
         }
         return ret;
@@ -226,16 +253,21 @@ public class Parser {
         for (Iterator<Identifiable> it = input.descendingIterator(); it.hasNext(); ) {
             Identifiable identifiable = it.next();
             if (operator == null) {
+                rhs.addFirst(identifiable);
+
                 if (rhs.isEmpty()) {
-                    rhs.add(identifiable);
                     continue;
                 }
 
-                operator = ops.get(identifiable.id());
+                if (!(identifiable instanceof OperatorToken))
+                    continue;
 
+                operator = ops.get(identifiable.id());
                 if (operator == null) {
-                    rhs.addFirst(identifiable);
+                    continue;
                 }
+
+                rhs.removeFirst();
             }
             else {
                 lhs.addFirst(identifiable);
@@ -254,7 +286,7 @@ public class Parser {
 
     private Identifiable parseFunction(IdentifierToken identifierToken) throws ParserException {
         if (peek().id() != '(')
-            throw new ParserException(peek(), "Unexpected character in parseBracket");
+            throw new ParserException(peek().position, "Unexpected character in parseBracket");
         ++position;
 
         try {
@@ -278,57 +310,27 @@ public class Parser {
                     break loop;
 
                 default:
-                    throw new ParserException(current, "Unmatched opening bracket");
+                    throw new ParserException(current.position, "Unmatched opening bracket");
                 }
             }
 
             return Functions.getFunction(identifierToken.value, args.toArray(new Invokable[args.size()]));
         } catch (NoSuchMethodException e) {
-            throw new ParserException(identifierToken, "Function not found", e);
+            throw new ParserException(identifierToken.position, "Function not found", e);
         }
     }
 
     private final Invokable parseBracket() throws ParserException {
         if (peek().id() != '(')
-            throw new ParserException(peek(), "Unexpected character in parseBracket");
+            throw new ParserException(peek().position, "Unexpected character in parseBracket");
         ++position;
 
         final Invokable ret = parseInternal();
 
         if (peek().id() != ')')
-            throw new ParserException(peek(), "Unmatched opening bracket");
+            throw new ParserException(peek().position, "Unmatched opening bracket");
         ++position;
 
         return ret;
     }
-
-    /*
-	private Invokable processLevel1(LinkedList<Identifiable> input) throws ParserException {
-		if (input.size() < 1){
-			throw new ParserException(new NullToken(-1), "Expression missing.");
-		}
-
-		if (input.size() > 1) {
-			final Identifiable extraElement = input.get(1);
-			if (extraElement instanceof Token) {
-				throw new ParserException((Token)extraElement, "Extra token found in expression: "+extraElement.toString());
-			}
-			else {
-				throw new ParserException(new NullToken(-1), "Extra expression found: "+extraElement);
-			}
-		}
-		return (Invokable) input.get(0);
-	}
-
-	private static final ListIterator<Identifiable> iteratorOf(List<Identifiable> list, String valid) {
-		ListIterator<Identifiable> ret = null;
-		for (ListIterator<Identifiable> it = list.listIterator(); it.hasNext(); ) {
-			if (valid.indexOf(it.next().id()) != -1) {
-				ret = it;
-				break;
-			}
-		}
-		return ret;
-	}
-     */
 }

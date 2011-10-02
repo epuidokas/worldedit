@@ -19,18 +19,21 @@
 
 package com.sk89q.worldedit.expression.lexer.tokens;
 
-public class NegateSignToken extends Token {
-    public NegateSignToken(int position) {
+public class OperatorToken extends Token {
+    public final char character;
+
+    public OperatorToken(int position, char character) {
         super(position);
+        this.character = character;
     }
 
     @Override
     public char id() {
-        return '~';
+        return character;
     }
 
     @Override
     public String toString() {
-        return "NegateSignToken";
+        return "CharacterToken("+character+")";
     }
 }

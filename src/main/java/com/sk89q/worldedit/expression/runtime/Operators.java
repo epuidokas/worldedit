@@ -19,8 +19,6 @@
 
 package com.sk89q.worldedit.expression.runtime;
 
-import static java.lang.Math.*;
-
 public final class Operators {
     public static final Function getOperator(String name, Invokable lhs, Invokable rhs) throws NoSuchMethodException {
         return new Function(Operators.class.getMethod(name, Invokable.class, Invokable.class), lhs, rhs);
@@ -40,7 +38,7 @@ public final class Operators {
     public static final double mod(Invokable lhs, Invokable rhs) throws Exception {
         return lhs.invoke()%rhs.invoke();
     }
-    public static final double exp(Invokable lhs, Invokable rhs) throws Exception {
-        return pow(lhs.invoke(), rhs.invoke());
+    public static final double pow(Invokable lhs, Invokable rhs) throws Exception {
+        return Math.pow(lhs.invoke(), rhs.invoke());
     }
 }
