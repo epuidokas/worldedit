@@ -61,4 +61,9 @@ public class Expression {
 
         return invokable.invoke();
     }
+
+    @Override
+    public String toString() {
+        return invokable.toString();
+    }
 }
