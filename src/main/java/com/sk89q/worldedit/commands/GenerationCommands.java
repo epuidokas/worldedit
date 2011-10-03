@@ -322,8 +322,8 @@ public class GenerationCommands {
     @Command(
         aliases = { "/generate", "/gen", "/g" },
         usage = "<block> <equation>",
-        desc = "Generates a shape according to a formula. -r for untransformed coordinates, -o for unscaled, but offset from placement",
-        flags = "ro",
+        desc = "Generates a shape according to a formula. -h for hollow, -r for untransformed coordinates, -o for unscaled, but offset from placement",
+        flags = "hro",
         min = 1,
         max = -1
     )
@@ -400,7 +400,8 @@ public class GenerationCommands {
             };
         }
 
-        int affected = shape.generate(editSession, pattern, true);
+        final boolean hollow = args.hasFlag('h');
+        int affected = shape.generate(editSession, pattern, hollow);
 
         player.findFreePosition();
         player.print(affected + " block(s) have been created.");
