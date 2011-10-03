@@ -76,7 +76,6 @@ public class Parser {
         LinkedList<Identifiable> halfProcessed = new LinkedList<Identifiable>();
 
         // process brackets, numbers, functions, variables and detect prefix operators
-        
         boolean expressionStart = true;
         loop: while (position < tokens.size()) {
             final Token current = peek();
@@ -132,6 +131,7 @@ public class Parser {
             }
         }
 
+        // process binary operators
         return processLevel4(halfProcessed);
     }
 
@@ -211,24 +211,9 @@ public class Parser {
             switch (last.id()) {
             case '-':
                 final Invokable arg = ret;
-                ret = new Invokable() {
-                    @Override
-                    public char id() {
-                        return 'n';
-                    }
-
-                    @Override
-                    public double invoke() throws Exception {
-                        return -arg.invoke();
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "-"+arg;
-                    }
-                };
+                ret = new NegateOperator(arg);
                 break;
-                
+
             case '+':
                 break;
 

@@ -21,8 +21,12 @@ package com.sk89q.worldedit.expression.runtime;
 
 import com.sk89q.worldedit.expression.Identifiable;
 
-public interface Invokable extends Identifiable {
-    public abstract double invoke() throws Exception;
+public abstract class Invokable implements Identifiable {
+    public abstract double invoke() throws EvaluationException;
 
     public abstract String toString();
+
+    public Invokable optimize() throws EvaluationException {
+        return this;
+    }
 }

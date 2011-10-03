@@ -19,7 +19,7 @@
 
 package com.sk89q.worldedit.expression.runtime;
 
-public final class Constant implements Invokable {
+public final class Constant extends Invokable {
     private final double value;
 
     public Constant(double value) {
@@ -27,7 +27,7 @@ public final class Constant implements Invokable {
     }
 
     @Override
-    public double invoke() throws Exception {
+    public double invoke() {
         return value;
     }
 

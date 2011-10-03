@@ -19,37 +19,69 @@
 
 package com.sk89q.worldedit.expression.runtime;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public final class Function implements Invokable {
+public class Function extends Invokable {
+    @Retention(RetentionPolicy.RUNTIME) public @interface Dynamic { }
     final Method method;
-    final Object[] args;
+    final Invokable[] args;
 
-    public Function(Method method, Object... args) {
+    public Function(Method method, Invokable... args) {
         this.method = method;
         this.args = args;
     }
 
     @Override
-    public final double invoke() throws Exception {
-        return (Double) method.invoke(null, args);
+    public final double invoke() throws EvaluationException {
+        try {
+            return (Double) method.invoke(null, (Object[])args);
+        } catch (InvocationTargetException e) {
+            if (e.getTargetException() instanceof EvaluationException) {
+                throw (EvaluationException) e.getTargetException();
+            }
+            throw new EvaluationException(-1, "Exception caught while evaluating expression", e.getTargetException());
+        } catch (IllegalAccessException e) {
+            throw new EvaluationException(-1, "Internal error while evaluating expression", e);
+        }
     }
 
     @Override
     public String toString() {
-        String ret = method.getName()+"(";
+        final StringBuilder ret = new StringBuilder(method.getName()).append('(');
         boolean first = true;
         for (Object obj : args) {
             if (!first)
-                ret += ", ";
+                ret.append(", ");
             first = false;
-            ret += obj;
+            ret.append(obj);
         }
-        return ret+")";
+        return ret.append(')').toString();
     }
 
     @Override
     public char id() {
         return 'f';
+    }
+
+    @Override
+    public Invokable optimize() throws EvaluationException {
+        final Invokable[] optimizedArgs = new Invokable[args.length];
+        boolean optimizable = !method.isAnnotationPresent(Dynamic.class);
+        for (int i = 0; i < args.length; ++i) {
+            final Invokable optimized = optimizedArgs[i] = args[i].optimize();
+
+            if (!(optimized instanceof Constant)) {
+                optimizable = false;
+            }
+        }
+
+        if (optimizable) {
+            return new Constant(invoke());
+        } else {
+            return new Function(method, optimizedArgs);
+        }
     }
 }

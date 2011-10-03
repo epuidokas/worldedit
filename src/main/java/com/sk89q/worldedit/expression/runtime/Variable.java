@@ -19,7 +19,7 @@
 
 package com.sk89q.worldedit.expression.runtime;
 
-public final class Variable implements Invokable {
+public final class Variable extends Invokable {
     public double value;
 
     public Variable(double value) {
@@ -27,7 +27,7 @@ public final class Variable implements Invokable {
     }
 
     @Override
-    public double invoke() throws Exception {
+    public double invoke() {
         return value;
     }
 

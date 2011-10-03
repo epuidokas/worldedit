@@ -27,13 +27,14 @@ import com.sk89q.worldedit.expression.lexer.Lexer;
 import com.sk89q.worldedit.expression.lexer.tokens.Token;
 import com.sk89q.worldedit.expression.parser.Parser;
 import com.sk89q.worldedit.expression.parser.ParserException;
+import com.sk89q.worldedit.expression.runtime.EvaluationException;
 import com.sk89q.worldedit.expression.runtime.Invokable;
 import com.sk89q.worldedit.expression.runtime.Variable;
 
 public class Expression {
     private final Map<String, Variable> variables = new HashMap<String, Variable>();
     private final String[] variableNames;
-    private final Invokable invokable;
+    private Invokable invokable;
 
     public static Expression compile(String expression, String... variableNames) throws ExpressionException {
         return new Expression(expression, variableNames);
@@ -60,6 +61,10 @@ public class Expression {
         }
 
         return invokable.invoke();
+    }
+
+    public void optimize() throws EvaluationException {
+        invokable = invokable.optimize();
     }
 
     @Override
