@@ -23,6 +23,11 @@ public final class Operators {
     public static final Function getOperator(String name, Invokable lhs, Invokable rhs) throws NoSuchMethodException {
         return new Function(Operators.class.getMethod(name, Invokable.class, Invokable.class), lhs, rhs);
     }
+    public static final Function getOperator(String name, Invokable argument) throws NoSuchMethodException {
+        return new Function(Operators.class.getMethod(name, Invokable.class), argument);
+    }
+
+
     public static final double add(Invokable lhs, Invokable rhs) throws EvaluationException {
         return lhs.invoke()+rhs.invoke();
     }
@@ -40,5 +45,15 @@ public final class Operators {
     }
     public static final double pow(Invokable lhs, Invokable rhs) throws EvaluationException {
         return Math.pow(lhs.invoke(), rhs.invoke());
+    }
+
+    public static final double neg(Invokable x) throws EvaluationException {
+        return -x.invoke();
+    }
+    public static final double not(Invokable x) throws EvaluationException {
+        return x.invoke() > 0.0 ? 0.0 : 1.0;
+    }
+    public static final double inv(Invokable x) throws EvaluationException {
+        return ~(long)x.invoke();
     }
 }

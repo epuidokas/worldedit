@@ -35,7 +35,6 @@ import com.sk89q.worldedit.expression.lexer.tokens.Token;
 import com.sk89q.worldedit.expression.runtime.Constant;
 import com.sk89q.worldedit.expression.runtime.Functions;
 import com.sk89q.worldedit.expression.runtime.Invokable;
-import com.sk89q.worldedit.expression.runtime.NegateOperator;
 import com.sk89q.worldedit.expression.runtime.Operators;
 import com.sk89q.worldedit.expression.runtime.Variable;
 
@@ -139,12 +138,16 @@ public class Parser {
     private static final Map<Character, String> level4Ops  = new HashMap<Character, String>();
     private static final Map<Character, String> level3Ops  = new HashMap<Character, String>();
     private static final Map<Character, String> powerOp = Collections.singletonMap('^', "pow");
+    private static final Map<Character, String> level2Ops  = new HashMap<Character, String>();
     static {
         level4Ops.put('+', "add");
         level4Ops.put('-', "sub");
         level3Ops.put('*', "mul");
         level3Ops.put('/', "div");
         level3Ops.put('%', "mod");
+        level2Ops.put('-', "neg");
+        level2Ops.put('!', "not");
+        level2Ops.put('~', "inv");
     }
 
     private Invokable processLevel4(LinkedList<Identifiable> input) throws ParserException {
@@ -209,16 +212,23 @@ public class Parser {
         Invokable ret = (Invokable) input.removeLast();
         while (!input.isEmpty()) {
             final Identifiable last = input.removeLast();
-            switch (last.id()) {
-            case '-':
-                final Invokable arg = ret;
-                ret = new NegateOperator(arg);
-                break;
-
+            final char id = last.id();
+            switch (id) {
             case '+':
                 break;
 
             default:
+                if (last instanceof PrefixOperator) {
+                    String opName = level2Ops.get(id);
+                    if (opName != null) {
+                        try {
+                            ret = Operators.getOperator(opName, ret);
+                            break;
+                        } catch (NoSuchMethodException e) {
+                            throw new ParserException(-1, "No such prefix operator: "+id);
+                        }
+                    }
+                }
                 if (last instanceof Token) {
                     throw new ParserException(((Token)last).position, "Extra token found in expression: "+last);
                 }

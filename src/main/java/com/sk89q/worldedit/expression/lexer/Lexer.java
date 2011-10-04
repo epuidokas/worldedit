@@ -56,6 +56,8 @@ public class Lexer {
             case '/':
             case '%':
             case '^':
+            case '!':
+            case '~':
                 tokens.add(new OperatorToken(position++, ch));
                 break;
 
