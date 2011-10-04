@@ -80,7 +80,8 @@ public class Function extends Invokable {
 
         if (optimizable) {
             return new Constant(invoke());
-        } else {
+        }
+        else {
             return new Function(method, optimizedArgs);
         }
     }

@@ -35,6 +35,7 @@ import com.sk89q.worldedit.expression.lexer.tokens.Token;
 import com.sk89q.worldedit.expression.runtime.Constant;
 import com.sk89q.worldedit.expression.runtime.Functions;
 import com.sk89q.worldedit.expression.runtime.Invokable;
+import com.sk89q.worldedit.expression.runtime.NegateOperator;
 import com.sk89q.worldedit.expression.runtime.Operators;
 import com.sk89q.worldedit.expression.runtime.Variable;
 

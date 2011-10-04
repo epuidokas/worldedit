@@ -23,22 +23,22 @@ public final class Operators {
     public static final Function getOperator(String name, Invokable lhs, Invokable rhs) throws NoSuchMethodException {
         return new Function(Operators.class.getMethod(name, Invokable.class, Invokable.class), lhs, rhs);
     }
-    public static final double add(Invokable lhs, Invokable rhs) throws Exception {
+    public static final double add(Invokable lhs, Invokable rhs) throws EvaluationException {
         return lhs.invoke()+rhs.invoke();
     }
-    public static final double sub(Invokable lhs, Invokable rhs) throws Exception {
+    public static final double sub(Invokable lhs, Invokable rhs) throws EvaluationException {
         return lhs.invoke()-rhs.invoke();
     }
-    public static final double mul(Invokable lhs, Invokable rhs) throws Exception {
+    public static final double mul(Invokable lhs, Invokable rhs) throws EvaluationException {
         return lhs.invoke()*rhs.invoke();
     }
-    public static final double div(Invokable lhs, Invokable rhs) throws Exception {
+    public static final double div(Invokable lhs, Invokable rhs) throws EvaluationException {
         return lhs.invoke()/rhs.invoke();
     }
-    public static final double mod(Invokable lhs, Invokable rhs) throws Exception {
+    public static final double mod(Invokable lhs, Invokable rhs) throws EvaluationException {
         return lhs.invoke()%rhs.invoke();
     }
-    public static final double pow(Invokable lhs, Invokable rhs) throws Exception {
+    public static final double pow(Invokable lhs, Invokable rhs) throws EvaluationException {
         return Math.pow(lhs.invoke(), rhs.invoke());
     }
 }

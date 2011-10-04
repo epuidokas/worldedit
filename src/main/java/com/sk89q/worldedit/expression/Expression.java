@@ -34,7 +34,7 @@ import com.sk89q.worldedit.expression.runtime.Variable;
 public class Expression {
     private final Map<String, Variable> variables = new HashMap<String, Variable>();
     private final String[] variableNames;
-    private Invokable invokable;
+    private Invokable root;
 
     public static Expression compile(String expression, String... variableNames) throws ExpressionException {
         return new Expression(expression, variableNames);
@@ -52,7 +52,7 @@ public class Expression {
             variables.put(variableName, new Variable(0));
         }
 
-        invokable = Parser.parse(tokenize, variables);
+        root = Parser.parse(tokenize, variables);
     }
 
     public double evaluate(double... values) throws Exception {
@@ -60,15 +60,15 @@ public class Expression {
             variables.get(variableNames[i]).value = values[i];
         }
 
-        return invokable.invoke();
+        return root.invoke();
     }
 
     public void optimize() throws EvaluationException {
-        invokable = invokable.optimize();
+        root = root.optimize();
     }
 
     @Override
     public String toString() {
-        return invokable.toString();
+        return root.toString();
     }
 }
