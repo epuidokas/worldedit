@@ -24,14 +24,14 @@ public class ExpressionTest {
         assertEquals(atan2(3,4), simpleEval("atan2(3,4)"), 0);
 
         // check variables
-        assertEquals(8, Expression.compile("x+y", "x", "y").evaluate(5, 3), 0);
+        assertEquals(8, Expression.compile("foo+bar", "foo", "bar").evaluate(5, 3), 0);
     }
 
     @Test
     public void testErrors() throws ExpressionException {
         // test lexer errors
         try {
-            Expression.compile("&");
+            Expression.compile("{");
             fail("Error expected");
         } catch (LexerException e) {
             assertEquals("Error position", 0, e.getPosition());

@@ -20,5 +20,27 @@
 package com.sk89q.worldedit.expression;
 
 public interface Identifiable {
+    /**
+     * Returns a character that helps identify the token, pseudo-token or invokable in question.
+     *
+     * <pre>
+     * Tokens:
+     * i - IdentifierToken
+     * 0 - NumberToken
+     * o - OperatorToken
+     * \0 - NullToken
+     * CharacterTokens are returned literally
+     *
+     * PseudoTokens:
+     * p - PrefixOperator
+     *
+     * Invokables:
+     * c - Constant
+     * f - Function
+     * v - Variable
+     * </pre>
+     */
     public abstract char id();
+
+    public int getPosition();
 }

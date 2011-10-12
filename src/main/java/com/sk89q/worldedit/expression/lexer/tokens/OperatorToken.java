@@ -20,20 +20,20 @@
 package com.sk89q.worldedit.expression.lexer.tokens;
 
 public class OperatorToken extends Token {
-    public final char character;
+    public final String operator;
 
-    public OperatorToken(int position, char character) {
+    public OperatorToken(int position, String operator) {
         super(position);
-        this.character = character;
+        this.operator = operator;
     }
 
     @Override
     public char id() {
-        return character;
+        return 'o';
     }
 
     @Override
     public String toString() {
-        return "CharacterToken("+character+")";
+        return "OperatorToken("+operator+")";
     }
 }

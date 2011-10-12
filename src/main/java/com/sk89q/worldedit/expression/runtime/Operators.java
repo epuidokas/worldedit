@@ -27,7 +27,6 @@ public final class Operators {
         return new Function(Operators.class.getMethod(name, Invokable.class), argument);
     }
 
-
     public static final double add(Invokable lhs, Invokable rhs) throws EvaluationException {
         return lhs.invoke()+rhs.invoke();
     }
@@ -55,5 +54,42 @@ public final class Operators {
     }
     public static final double inv(Invokable x) throws EvaluationException {
         return ~(long)x.invoke();
+    }
+
+    public static final double lth(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() < rhs.invoke() ? 1.0 : 0.0;
+    }
+    public static final double gth(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() > rhs.invoke() ? 1.0 : 0.0;
+    }
+    public static final double leq(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() <= rhs.invoke() ? 1.0 : 0.0;
+    }
+    public static final double geq(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() >= rhs.invoke() ? 1.0 : 0.0;
+    }
+
+    public static final double equ(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() == rhs.invoke() ? 1.0 : 0.0;
+    }
+    public static final double neq(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() != rhs.invoke() ? 1.0 : 0.0;
+    }
+    public static final double near(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return Math.abs(lhs.invoke() - rhs.invoke()) < 1e-7 ? 1.0 : 0.0;
+    }
+
+    public static final double or(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() > 0.0 || rhs.invoke() > 0.0 ? 1.0 : 0.0;
+    }
+    public static final double and(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return lhs.invoke() > 0.0 && rhs.invoke() > 0.0 ? 1.0 : 0.0;
+    }
+
+    public static final double shl(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return (long)lhs.invoke() << (long)rhs.invoke();
+    }
+    public static final double shr(Invokable lhs, Invokable rhs) throws EvaluationException {
+        return (long)lhs.invoke() >> (long)rhs.invoke();
     }
 }

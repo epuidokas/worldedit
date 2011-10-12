@@ -29,4 +29,9 @@ public abstract class Invokable implements Identifiable {
     public Invokable optimize() throws EvaluationException {
         return this;
     }
+
+    @Override
+    public int getPosition() {
+        return -1;
+    }
 }

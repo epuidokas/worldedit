@@ -44,7 +44,7 @@ public class Expression {
         this(Lexer.tokenize(expression), variableNames);
     }
 
-    private Expression(List<Token> tokenize, String... variableNames) throws ParserException {
+    private Expression(List<Token> tokens, String... variableNames) throws ParserException {
         this.variableNames = variableNames;
         variables.put("e", new Variable(Math.E));
         variables.put("pi", new Variable(Math.PI));
@@ -52,7 +52,7 @@ public class Expression {
             variables.put(variableName, new Variable(0));
         }
 
-        root = Parser.parse(tokenize, variables);
+        root = Parser.parse(tokens, variables);
     }
 
     public double evaluate(double... values) throws Exception {

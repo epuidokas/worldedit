@@ -20,7 +20,9 @@
 package com.sk89q.worldedit.expression.lexer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,6 +40,40 @@ public class Lexer {
         return new Lexer(expression).tokenize();
     }
 
+    private final DecisionTree operatorTree = new DecisionTree(null,
+            '-', new DecisionTree("-"),
+            '+', new DecisionTree("+"),
+            '*', new DecisionTree("*",
+                    '*', new DecisionTree("^")
+            ),
+            '/', new DecisionTree("/"),
+            '%', new DecisionTree("%"),
+            '^', new DecisionTree("^"),
+            '=', new DecisionTree(null, // not implemented
+                    '=', new DecisionTree("==")
+            ),
+            '!', new DecisionTree("!",
+                    '=', new DecisionTree("!=")
+            ),
+            '<', new DecisionTree("<",
+                    '<', new DecisionTree("<<"),
+                    '=', new DecisionTree("<=")
+            ),
+            '>', new DecisionTree(">",
+                    '>', new DecisionTree(">>"),
+                    '=', new DecisionTree(">=")
+            ),
+            '&', new DecisionTree(null, // not implemented
+                    '&', new DecisionTree("&&")
+            ),
+            '|', new DecisionTree(null, // not implemented
+                    '|', new DecisionTree("||")
+            ),
+            '~', new DecisionTree("~",
+                    '=', new DecisionTree("~=")
+            )
+    );
+
     private static final Pattern numberPattern = Pattern.compile("^([0-9]*(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)");
     private static final Pattern identifierPattern = Pattern.compile("^([A-Za-z][0-9A-Za-z_]*)");
     private final List<Token> tokenize() throws LexerException {
@@ -48,19 +84,14 @@ public class Lexer {
             if (position >= expression.length())
                 break;
 
+            Token token = operatorTree.evaluate(position);
+            if (token != null) {
+                tokens.add(token);
+                continue;
+            }
+
             final char ch = peek();
             switch (ch) {
-            case '-':
-            case '+':
-            case '*':
-            case '/':
-            case '%':
-            case '^':
-            case '!':
-            case '~':
-                tokens.add(new OperatorToken(position++, ch));
-                break;
-
             case ',':
             case '(':
             case ')':
@@ -79,7 +110,7 @@ public class Lexer {
                         }
 
                         position += numberPart.length();
-                        break;
+                        continue;
                     }
                 }
 
@@ -90,7 +121,7 @@ public class Lexer {
                         tokens.add(new IdentifierToken(position, identifierPart));
 
                         position += identifierPart.length();
-                        break;
+                        continue;
                     }
                 }
 
@@ -109,6 +140,55 @@ public class Lexer {
     private final void skipWhitespace() {
         while (position < expression.length() && Character.isWhitespace(peek())) {
             ++position;
+        }
+    }
+
+    public class DecisionTree {
+        private final String tokenName;
+        private final Map<Character, DecisionTree> subTrees = new HashMap<Character, Lexer.DecisionTree>();
+
+        private DecisionTree(String tokenName, Object... args) {
+            this.tokenName = tokenName;
+
+            if (args.length % 2 != 0) {
+                throw new UnsupportedOperationException("You need to pass an even number of arguments.");
+            }
+
+            for (int i = 0; i < args.length; i += 2) {
+                if (!(args[i] instanceof Character)) {
+                    throw new UnsupportedOperationException("Argument #"+i+" expected to be 'Character', not '"+args[i].getClass().getName()+"'.");
+                }
+                if (!(args[i+1] instanceof DecisionTree)) {
+                    throw new UnsupportedOperationException("Argument #"+(i+1)+" expected to be 'DecisionTree', not '"+args[i+1].getClass().getName()+"'.");
+                }
+
+                Character next = (Character) args[i];
+                DecisionTree subTree = (DecisionTree) args[i+1];
+
+                subTrees.put(next, subTree);
+            }
+        }
+
+        private Token evaluate(int startPosition) throws LexerException {
+            if (position < expression.length()) {
+                final char next = peek();
+
+                final DecisionTree subTree = subTrees.get(next);
+                if (subTree != null) {
+                    ++position;
+                    final Token subTreeResult = subTree.evaluate(startPosition);
+                    if (subTreeResult != null) {
+                        return subTreeResult;
+                    }
+                    --position;
+                }
+            }
+
+            if (tokenName == null) {
+                return null;
+            }
+
+            return new OperatorToken(startPosition, tokenName);
         }
     }
 }
