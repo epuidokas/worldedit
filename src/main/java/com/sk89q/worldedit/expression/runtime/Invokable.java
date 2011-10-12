@@ -22,8 +22,16 @@ package com.sk89q.worldedit.expression.runtime;
 import com.sk89q.worldedit.expression.Identifiable;
 
 public abstract class Invokable implements Identifiable {
+    private final int position;
+
+    public Invokable(int position) {
+        super();
+        this.position = position;
+    }
+
     public abstract double invoke() throws EvaluationException;
 
+    @Override
     public abstract String toString();
 
     public Invokable optimize() throws EvaluationException {
@@ -32,6 +40,6 @@ public abstract class Invokable implements Identifiable {
 
     @Override
     public int getPosition() {
-        return -1;
+        return position;
     }
 }

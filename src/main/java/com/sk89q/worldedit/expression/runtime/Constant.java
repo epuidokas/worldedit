@@ -22,7 +22,8 @@ package com.sk89q.worldedit.expression.runtime;
 public final class Constant extends Invokable {
     private final double value;
 
-    public Constant(double value) {
+    public Constant(int position, double value) {
+        super(position);
         this.value = value;
     }
 

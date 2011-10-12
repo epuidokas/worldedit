@@ -23,6 +23,7 @@ public final class Variable extends Invokable {
     public double value;
 
     public Variable(double value) {
+        super(-1);
         this.value = value;
     }
 

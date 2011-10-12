@@ -20,11 +20,11 @@
 package com.sk89q.worldedit.expression.runtime;
 
 public final class Operators {
-    public static final Function getOperator(String name, Invokable lhs, Invokable rhs) throws NoSuchMethodException {
-        return new Function(Operators.class.getMethod(name, Invokable.class, Invokable.class), lhs, rhs);
+    public static final Function getOperator(int position, String name, Invokable lhs, Invokable rhs) throws NoSuchMethodException {
+        return new Function(position, Operators.class.getMethod(name, Invokable.class, Invokable.class), lhs, rhs);
     }
-    public static final Function getOperator(String name, Invokable argument) throws NoSuchMethodException {
-        return new Function(Operators.class.getMethod(name, Invokable.class), argument);
+    public static final Function getOperator(int position, String name, Invokable argument) throws NoSuchMethodException {
+        return new Function(position, Operators.class.getMethod(name, Invokable.class), argument);
     }
 
     public static final double add(Invokable lhs, Invokable rhs) throws EvaluationException {

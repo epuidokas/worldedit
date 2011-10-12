@@ -29,7 +29,8 @@ public class Function extends Invokable {
     final Method method;
     final Invokable[] args;
 
-    public Function(Method method, Invokable... args) {
+    Function(int position, Method method, Invokable... args) {
+        super(position);
         this.method = method;
         this.args = args;
     }
@@ -79,10 +80,10 @@ public class Function extends Invokable {
         }
 
         if (optimizable) {
-            return new Constant(invoke());
+            return new Constant(getPosition(), invoke());
         }
         else {
-            return new Function(method, optimizedArgs);
+            return new Function(getPosition(), method, optimizedArgs);
         }
     }
 }

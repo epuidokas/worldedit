@@ -22,10 +22,10 @@ package com.sk89q.worldedit.expression.runtime;
 import java.util.Arrays;
 
 public final class Functions {
-    public static final Function getFunction(String name, Invokable... args) throws NoSuchMethodException {
+    public static final Function getFunction(int position, String name, Invokable... args) throws NoSuchMethodException {
         final Class<?>[] parameterTypes = (Class<?>[]) new Class[args.length];
         Arrays.fill(parameterTypes, Invokable.class);
-        return new Function(Functions.class.getMethod(name, parameterTypes), args);
+        return new Function(position, Functions.class.getMethod(name, parameterTypes), args);
     }
 
     public static final double sin(Invokable x) throws Exception {

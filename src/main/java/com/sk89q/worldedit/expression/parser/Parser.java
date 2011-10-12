@@ -83,7 +83,7 @@ public class Parser {
 
             switch (current.id()) {
             case '0':
-                halfProcessed.add(new Constant(((NumberToken) current).value));
+                halfProcessed.add(new Constant(current.getPosition(), ((NumberToken) current).value));
                 ++position;
                 expressionStart = false;
                 break;
@@ -245,7 +245,7 @@ public class Parser {
         Invokable lhsInvokable = processBinaryOps(lhs, level);
 
         try {
-            return Operators.getOperator(operator, lhsInvokable, rhsInvokable);
+            return Operators.getOperator(-1, operator, lhsInvokable, rhsInvokable); // TODO: get real position
         } catch (NoSuchMethodException e) {
             final Token operatorToken = (Token) input.get(lhs.size());
             throw new ParserException(operatorToken.getPosition(), "Couldn't find operator '"+operator+"'");
@@ -261,7 +261,6 @@ public class Parser {
         while (!input.isEmpty()) {
             final Identifiable last = input.removeLast();
             if (last instanceof PrefixOperator) {
-                
                 final String operator = ((PrefixOperator) last).operator;
                 if (operator.equals("+")) {
                     continue;
@@ -270,7 +269,7 @@ public class Parser {
                 String opName = unaryOpMap.get(operator);
                 if (opName != null) {
                     try {
-                        ret = Operators.getOperator(opName, ret);
+                        ret = Operators.getOperator(last.getPosition(), opName, ret);
                         continue;
                     } catch (NoSuchMethodException e) {
                         throw new ParserException(last.getPosition(), "No such prefix operator: "+operator);
@@ -305,7 +304,7 @@ public class Parser {
 
         try {
             if (peek().id() == ')') {
-                return Functions.getFunction(identifierToken.value);
+                return Functions.getFunction(identifierToken.getPosition(), identifierToken.value);
             }
 
             List<Invokable> args = new ArrayList<Invokable>();
@@ -328,7 +327,7 @@ public class Parser {
                 }
             }
 
-            return Functions.getFunction(identifierToken.value, args.toArray(new Invokable[args.size()]));
+            return Functions.getFunction(identifierToken.getPosition(), identifierToken.value, args.toArray(new Invokable[args.size()]));
         } catch (NoSuchMethodException e) {
             throw new ParserException(identifierToken.getPosition(), "Function not found", e);
         }
